@@ -1,4 +1,4 @@
-// Generated from com/sin/lineage/antlr/clickhouse/ClickHouseParser.g4 by ANTLR 4.9.3
+// Generated from com/sin/lineage/antlr/clickhouse/ClickHouseParser.g4 by ANTLR 4.13.2
 package com.sin.lineage.antlr.clickhouse;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 

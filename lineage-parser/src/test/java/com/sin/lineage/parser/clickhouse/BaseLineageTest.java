@@ -28,6 +28,10 @@ public class BaseLineageTest {
 
     @AfterEach
     void afterEach() {
+        if (lineages == null) {
+            return;
+        }
+
         if (isLog) {
             System.out.println("未过滤中间表的血缘: ");
             lineages.forEach(v -> {

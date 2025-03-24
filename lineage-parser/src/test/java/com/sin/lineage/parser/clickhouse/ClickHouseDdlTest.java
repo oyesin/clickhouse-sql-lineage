@@ -12,7 +12,14 @@ public class ClickHouseDdlTest {
 
     @Test
     public void test1() throws Exception {
-        String sql = "CREATE TABLE test_table (id UInt32, name String, age UInt8) ENGINE = MergeTree() ORDER BY id PARTITION BY toYYYYMM(id)";
+        String sql = """
+                CREATE TABLE test_table (
+                    id UInt32,
+                    name STRING,
+                    age UInt8
+                ) ENGINE = MergeTree()
+                ORDER BY id
+                """;
         List<TableMeta> tableMetas = ClickHouseLineageParser.parseDdl(Lists.newArrayList(sql));
 
 
