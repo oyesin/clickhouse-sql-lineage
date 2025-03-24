@@ -117,6 +117,10 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
             stmtColumns.addAll(insertColumns);
         }
 
+        if (stmtColumns.size() != srcColumns.size()) {
+            throw new LineageException("insert与select的列数量不匹配");
+        }
+
         // 按照列顺序添加血缘
         for (int i = 0; i < stmtColumns.size(); i++) {
             Node srcNode = new Node(statement.getSinkTable().getName(), stmtColumns.get(i).getName());
@@ -178,7 +182,7 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
         });
         statement.setColumns(expandColumns);
 
-        // 添加sink表的元数据
+        // 添加sink表拥有的列
         if (!tableMap.containsKey(statement.getSinkTable().getName())) {
             List<String> columns = expandColumns.stream()
                     .map(Column::getName)
@@ -192,8 +196,6 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
 
     private void parseColumnLineage(Statement statement) {
         statement.getColumns().forEach(column -> {
-            List<String> sinkColumns = tableMap.computeIfAbsent(statement.getSinkTable().getName(), v -> Lists.newArrayList());
-            sinkColumns.add(column.getName());
             statement.getSourceTable().forEach(sourceTable -> {
                 // 获取来源表拥有的列
                 List<String> columns = tableMap.getOrDefault(sourceTable.getName(), Lists.newArrayList());
