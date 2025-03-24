@@ -114,7 +114,7 @@ createStmt
 
 dictionarySchemaClause: LPAREN dictionaryAttrDfnt (COMMA dictionaryAttrDfnt)* RPAREN;
 dictionaryAttrDfnt
-locals [java.util.Set<String> attrs]:
+locals [java.util.Set<String> attrs = new java.util.HashSet<String>()]:
     identifier columnTypeExpr
     ( {!$attrs.contains("default")}?      DEFAULT literal       {$attrs.add("default");}
     | {!$attrs.contains("expression")}?   EXPRESSION columnExpr {$attrs.add("expression");}
@@ -124,7 +124,7 @@ locals [java.util.Set<String> attrs]:
     )*
     ;
 dictionaryEngineClause
-locals [java.util.Set<String> clauses]:
+locals [java.util.Set<String> clauses = new java.util.HashSet<String>()]:
     dictionaryPrimaryKeyClause?
     ( {!$clauses.contains("source")}? sourceClause {$clauses.add("source");}
     | {!$clauses.contains("lifetime")}? lifetimeClause {$clauses.add("lifetime");}
@@ -154,7 +154,7 @@ tableSchemaClause
     | AS tableFunctionExpr                                      # SchemaAsFunctionClause
     ;
 engineClause
-locals [java.util.Set<String> clauses]:
+locals [java.util.Set<String> clauses = new java.util.HashSet<String>()]:
     engineExpr
     ( {!$clauses.contains("orderByClause")}?     orderByClause     {$clauses.add("orderByClause");}
     | {!$clauses.contains("partitionByClause")}? partitionByClause {$clauses.add("partitionByClause");}

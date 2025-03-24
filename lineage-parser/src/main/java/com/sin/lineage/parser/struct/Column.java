@@ -31,4 +31,9 @@ public class Column {
     public Column(String name) {
         this.name = name;
     }
+
+    public Column(String identifier, String name) {
+        this.identifier = identifier;
+        this.name = name;
+    }
 }

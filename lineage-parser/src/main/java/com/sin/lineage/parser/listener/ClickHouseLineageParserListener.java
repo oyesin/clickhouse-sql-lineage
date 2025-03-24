@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.sin.lineage.antlr.clickhouse.ClickHouseParser;
 import com.sin.lineage.antlr.clickhouse.ClickHouseParserBaseListener;
 import com.sin.lineage.parser.enums.TableType;
+import com.sin.lineage.parser.exception.LineageException;
 import com.sin.lineage.parser.struct.Column;
 import com.sin.lineage.parser.struct.Statement;
 import com.sin.lineage.parser.struct.StatementType;
@@ -36,17 +37,12 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
 
     private Integer stmtIndex = 0;
 
-    /**
-     * 存储insert语句与其select语句的上下文映射关系
-     */
-    private Pair<ClickHouseParser.InsertStmtContext, ClickHouseParser.SelectUnionStmtContext> insertStmtMap;
-
-    private Map<RuleContext, Statement> stmtMap = Maps.newHashMap();
+    private final Map<RuleContext, Statement> stmtMap = Maps.newHashMap();
 
     /**
      * 存储表名和表拥有的列的映射关系
      */
-    private Map<String, List<String>> tableMap = Maps.newHashMap();
+    private final Map<String, List<String>> tableMap = Maps.newHashMap();
 
     /**
      * 存储血缘的目标表名
@@ -86,9 +82,46 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
         // 添加source表
         if (ctx.dataClause() instanceof ClickHouseParser.DataClauseSelectContext) {
             ClickHouseParser.DataClauseSelectContext selectCtx = (ClickHouseParser.DataClauseSelectContext) ctx.dataClause();
-            statement.addSourceTable(new Table(generateStmtName(), TableType.TMP_TABLE));
-            insertStmtMap = Pair.of(ctx, selectCtx.selectUnionStmt());
+            Table sourceTable = new Table(generateStmtName(), TableType.TMP_TABLE);
+            Statement srcStatement = new Statement(StatementType.SELECT);
+            srcStatement.setSinkTable(sourceTable);
+
+            statement.addSourceTable(sourceTable);
             stmtMap.put(ctx, statement);
+            stmtMap.put(selectCtx.selectUnionStmt(), srcStatement);
+        }
+    }
+
+    /**
+     * 处理insert语句的列血缘
+     */
+    @Override
+    public void exitInsertStmt(ClickHouseParser.InsertStmtContext ctx) {
+        Statement statement = stmtMap.get(ctx);
+        if (statement.getSourceTable().isEmpty()) {
+            return;
+        }
+
+        Table sourceTable = statement.getSourceTable().get(0);
+        List<String> srcColumns = tableMap.get(sourceTable.getName());
+
+        // insert into没有定义列的情况
+        List<Column> stmtColumns = statement.getColumns();
+        if (stmtColumns.isEmpty()) {
+            List<String> sinkColumns = tableMap.get(statement.getSinkTable().getName());
+            List<Column> insertColumns = sinkColumns.subList(0, srcColumns.size()).stream().map(v -> {
+                Column column = new Column(v);
+                column.setIdentifier(sourceTable.getName());
+                return column;
+            }).collect(Collectors.toList());
+            stmtColumns.addAll(insertColumns);
+        }
+
+        // 按照列顺序添加血缘
+        for (int i = 0; i < stmtColumns.size(); i++) {
+            Node srcNode = new Node(statement.getSinkTable().getName(), stmtColumns.get(i).getName());
+            Node tgtNode = new Node(sourceTable.getName(), srcColumns.get(i));
+            Graphs.addEdgeWithVertices(g, srcNode, tgtNode);
         }
     }
 
@@ -120,8 +153,47 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
     public void exitSelectUnionStmt(ClickHouseParser.SelectUnionStmtContext ctx) {
         Statement statement = getStatementOfTopContext(ctx);
 
+        List<Column> expandColumns = Lists.newArrayList();
+        statement.getColumns().forEach(col -> {
+            // 拓展*列为具体的列
+            if ("*".equals(col.getName())) {
+                if (col.getIdentifier() != null) {
+                    Table srcTable = statement.getSourceTable().stream()
+                            .filter(v -> v.getAlias() == null ? v.getName().equals(col.getIdentifier())
+                                    : v.getAlias().equals(col.getIdentifier()))
+                            .findFirst()
+                            .orElseThrow(() -> new LineageException(String.format("找不到列标识符 %s 对应的表", col.getIdentifier())));
+                    tableMap.get(srcTable.getName()).stream()
+                            .map(v -> new Column(col.getIdentifier(), v))
+                            .forEach(expandColumns::add);
+                } else {
+                    statement.getSourceTable()
+                            .forEach(srcTable -> tableMap.get(srcTable.getName()).stream()
+                                    .map(srcCol -> new Column(srcTable.getName(), srcCol))
+                                    .forEach(expandColumns::add));
+                }
+            } else {
+                expandColumns.add(col);
+            }
+        });
+        statement.setColumns(expandColumns);
+
+        // 添加sink表的元数据
+        if (!tableMap.containsKey(statement.getSinkTable().getName())) {
+            List<String> columns = expandColumns.stream()
+                    .map(Column::getName)
+                    .collect(Collectors.toList());
+            tableMap.put(statement.getSinkTable().getName(), columns);
+        }
+
         // 解析列血缘
+        parseColumnLineage(statement);
+    }
+
+    private void parseColumnLineage(Statement statement) {
         statement.getColumns().forEach(column -> {
+            List<String> sinkColumns = tableMap.computeIfAbsent(statement.getSinkTable().getName(), v -> Lists.newArrayList());
+            sinkColumns.add(column.getName());
             statement.getSourceTable().forEach(sourceTable -> {
                 // 获取来源表拥有的列
                 List<String> columns = tableMap.getOrDefault(sourceTable.getName(), Lists.newArrayList());
@@ -151,9 +223,50 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
         ClickHouseParser.JoinExprContext joinExprCtx = ctx.joinExpr();
         Statement statement = getStatementOfTopContext(ctx);
 
-        if (joinExprCtx instanceof ClickHouseParser.JoinExprTableContext) {
-            statement.addSourceTable(parseTableExpr(((ClickHouseParser.JoinExprTableContext) joinExprCtx).tableExpr()));
+        statement.addSourceTables(parseJoinExpr(joinExprCtx));
+    }
+
+    /**
+     * <pre>
+     * joinExpr
+     *     : joinExpr (GLOBAL | LOCAL)? joinOp? JOIN joinExpr joinConstraintClause  # JoinExprOp
+     *     | joinExpr joinOpCross joinExpr                                          # JoinExprCrossOp
+     *     | tableExpr FINAL? sampleClause?                                         # JoinExprTable
+     *     | LPAREN joinExpr RPAREN                                                 # JoinExprParens
+     *     ;
+     * </pre>
+     */
+    private List<Table> parseJoinExpr(ClickHouseParser.JoinExprContext ctx) {
+        if (ctx instanceof ClickHouseParser.JoinExprOpContext) {
+            ClickHouseParser.JoinExprOpContext instanceCtx = (ClickHouseParser.JoinExprOpContext) ctx;
+            return instanceCtx.joinExpr().stream()
+                    .flatMap(v -> parseJoinExpr(v).stream())
+                    .collect(Collectors.toList());
         }
+
+        if (ctx instanceof ClickHouseParser.JoinExprCrossOpContext) {
+            ClickHouseParser.JoinExprCrossOpContext instanceCtx = (ClickHouseParser.JoinExprCrossOpContext) ctx;
+            return instanceCtx.joinExpr().stream()
+                    .flatMap(v -> parseJoinExpr(v).stream())
+                    .collect(Collectors.toList());
+        }
+
+        if (ctx instanceof ClickHouseParser.JoinExprTableContext) {
+            ClickHouseParser.JoinExprTableContext instanceCtx = (ClickHouseParser.JoinExprTableContext) ctx;
+            Table table = parseTableExpr(instanceCtx.tableExpr());
+            if (table == null) {
+                return Lists.newArrayList();
+            }
+
+            return Lists.newArrayList(table);
+        }
+
+        if (ctx instanceof ClickHouseParser.JoinExprParensContext) {
+            ClickHouseParser.JoinExprParensContext instanceCtx = (ClickHouseParser.JoinExprParensContext) ctx;
+            return parseJoinExpr(instanceCtx.joinExpr());
+        }
+
+        return Lists.newArrayList();
     }
 
     private Statement getStatementOfTopContext(RuleContext ctx) {
@@ -190,6 +303,17 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
      * </pre>
      */
     private List<Column> parseColumnsExpr(ClickHouseParser.ColumnsExprContext ctx) {
+        if (ctx instanceof ClickHouseParser.ColumnsExprAsteriskContext) {
+            ClickHouseParser.ColumnsExprAsteriskContext instanceCtx = (ClickHouseParser.ColumnsExprAsteriskContext) ctx;
+            Column column = new Column("*");
+            if (instanceCtx.tableIdentifier() != null) {
+                Table table = parseTableIdentifier(instanceCtx.tableIdentifier());
+                column.setIdentifier(table.getName());
+            }
+
+            return Lists.newArrayList(column);
+        }
+
         if (ctx instanceof ClickHouseParser.ColumnsExprColumnContext) {
             return parseColumnExpr(((ClickHouseParser.ColumnsExprColumnContext) ctx).columnExpr());
         }
@@ -218,8 +342,34 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
      */
     private Table parseTableExpr(ClickHouseParser.TableExprContext ctx) {
         if (ctx instanceof ClickHouseParser.TableExprIdentifierContext) {
-            ClickHouseParser.TableExprIdentifierContext context = (ClickHouseParser.TableExprIdentifierContext) ctx;
-            return parseTableIdentifier(context.tableIdentifier());
+            ClickHouseParser.TableExprIdentifierContext instanceCtx = (ClickHouseParser.TableExprIdentifierContext) ctx;
+            return parseTableIdentifier(instanceCtx.tableIdentifier());
+        }
+
+        // 未解析 TableExprFunction
+
+        if (ctx instanceof ClickHouseParser.TableExprSubqueryContext) {
+            ClickHouseParser.TableExprSubqueryContext instanceCtx = (ClickHouseParser.TableExprSubqueryContext) ctx;
+            Statement statement = new Statement(StatementType.SELECT);
+            String tableName;
+            if (instanceCtx.getParent() != null && instanceCtx.getParent() instanceof ClickHouseParser.TableExprAliasContext) {
+                ClickHouseParser.TableExprAliasContext parent = (ClickHouseParser.TableExprAliasContext) instanceCtx.getParent();
+                tableName = parent.alias() == null ? parent.identifier().getText() : parent.alias().getText();
+            } else {
+                tableName = generateStmtName();
+            }
+            Table result = new Table(tableName, TableType.TMP_TABLE);
+            statement.setSinkTable(result);
+            stmtMap.put(instanceCtx.selectUnionStmt(), statement);
+            return result;
+        }
+
+        if (ctx instanceof ClickHouseParser.TableExprAliasContext) {
+            ClickHouseParser.TableExprAliasContext instanceCtx = (ClickHouseParser.TableExprAliasContext) ctx;
+            String tableAlias = instanceCtx.alias() == null ? instanceCtx.identifier().getText() : instanceCtx.alias().getText();
+            Table result = parseTableExpr(instanceCtx.tableExpr());
+            result.setAlias(tableAlias);
+            return result;
         }
 
         return null;

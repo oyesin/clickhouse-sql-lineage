@@ -25,14 +25,87 @@ public class ClickHouseSimpleTest extends BaseLineageTest {
     void test() throws Exception {
         sql = "select id from t_user";
 
-        TableMeta tableMeta = new TableMeta();
-        tableMeta.setName("t_user");
-        tableMeta.setColumns(Lists.newArrayList("id", "name", "age"));
+        TableMeta tableMeta = getTableMeta();
 
         lineages = ClickHouseLineageParser.parseColumnLineage(sql, Lists.newArrayList(tableMeta));
 
         expected = new String[]{
-                "stmt0.id->t_user.id"
+                "t_user.id->stmt0.id"
         };
+    }
+
+    @Test
+    void testTableAlias() throws Exception {
+        sql = "SELECT t.* FROM t_user t";
+
+        TableMeta tableMeta = getTableMeta();
+
+        lineages = ClickHouseLineageParser.parseColumnLineage(sql, Lists.newArrayList(tableMeta));
+
+        expected = new String[]{
+                "t_user.id->stmt0.id",
+                "t_user.name->stmt0.name",
+                "t_user.age->stmt0.age"
+        };
+    }
+
+    @Test
+    void testSameAlias() throws Exception {
+        sql = "SELECT\n" +
+                "  *\n" +
+                "FROM\n" +
+                "  (\n" +
+                "    SELECT\n" +
+                "      *\n" +
+                "    FROM\n" +
+                "      t_user a\n" +
+                "  ) a";
+
+        TableMeta tableMeta = getTableMeta();
+
+        lineages = ClickHouseLineageParser.parseColumnLineage(sql, Lists.newArrayList(tableMeta));
+
+        expected = new String[]{
+                "t_user.id->stmt0.id",
+                "t_user.name->stmt0.name",
+                "t_user.age->stmt0.age"
+        };
+    }
+
+    @Test
+    void testMultiSubQuery() throws Exception {
+        sql = "SELECT\n" +
+                "    *\n" +
+                "FROM\n" +
+                "    (\n" +
+                "        SELECT\n" +
+                "            *\n" +
+                "        FROM\n" +
+                "            (\n" +
+                "                SELECT\n" +
+                "                    *\n" +
+                "                FROM\n" +
+                "                    t_user\n" +
+                "            ) b\n" +
+                "    ) a";
+
+        TableMeta tableMeta = getTableMeta();
+
+        lineages = ClickHouseLineageParser.parseColumnLineage(sql, Lists.newArrayList(tableMeta));
+
+        expected = new String[]{
+                "t_user.id->stmt0.id",
+                "t_user.name->stmt0.name",
+                "t_user.age->stmt0.age"
+        };
+    }
+
+    private TableMeta getTableMeta() throws Exception {
+        String createSql = "CREATE TABLE t_user (\n" +
+                "  id Int64,\n" +
+                "  name String,\n" +
+                "  age Int64\n" +
+                ") ENGINE = MergeTree() ORDER BY id";
+        return ClickHouseLineageParser.parseDdl(Lists.newArrayList(createSql)).get(0);
     }
 }

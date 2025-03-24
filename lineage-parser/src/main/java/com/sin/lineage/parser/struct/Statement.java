@@ -37,4 +37,8 @@ public class Statement {
     public void addSourceTable(Table sourceTable) {
         this.sourceTable.add(sourceTable);
     }
+
+    public void addSourceTables(List<Table> sourceTables) {
+        this.sourceTable.addAll(sourceTables);
+    }
 }

@@ -3,6 +3,7 @@ package com.sin.lineage.parser;
 import com.google.common.collect.Lists;
 import com.sin.lineage.antlr.clickhouse.ClickHouseLexer;
 import com.sin.lineage.antlr.clickhouse.ClickHouseParser;
+import com.sin.lineage.parser.listener.ClickHouseDdlParserListener;
 import com.sin.lineage.parser.listener.ClickHouseLineageParserListener;
 import com.sin.lineage.parser.struct.graph.Node;
 import com.sin.lineage.parser.struct.meta.TableMeta;
@@ -26,6 +27,17 @@ import java.util.stream.Collectors;
  */
 public class ClickHouseLineageParser {
 
+    /**
+     * 解析DDlL语句
+     *
+     * @param createTableSqlList create table sql列表
+     * @return 表元数据列表
+     */
+    public static List<TableMeta> parseDdl(List<String> createTableSqlList) throws Exception {
+        return createTableSqlList.stream()
+                .map(ClickHouseLineageParser::parseDdl)
+                .collect(Collectors.toList());
+    }
 
     /**
      * 解析列血缘
@@ -46,13 +58,38 @@ public class ClickHouseLineageParser {
     }
 
     /**
+     * 解析DDL语句
+     *
+     * @param singleSql 单条createSql语句
+     * @return 表元数据
+     */
+    private static TableMeta parseDdl(String singleSql) {
+        // 创建词法分析器
+        ClickHouseLexer lexer = new ClickHouseLexer(CharStreams.fromString(singleSql));
+
+        // 创建语法分析器
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        ClickHouseParser parser = new ClickHouseParser(tokens);
+
+        // 自定义的ClickHouse血缘解析监听器
+        ClickHouseDdlParserListener listener = new ClickHouseDdlParserListener();
+
+        // 遍历语法分析过程中生成的语法分析树，触发回调
+        ParseTreeWalker walker = new ParseTreeWalker();
+        walker.walk(listener, parser.queryStmt());
+
+        // 返回图
+        return listener.getTableMeta();
+    }
+
+    /**
      * 解析血缘
      *
      * @param singleSql 单条sql
      * @return 图
      * @throws Exception 解析异常
      */
-    private static Pair<SimpleDirectedGraph<Node, DefaultEdge>, String> parseLineage(String singleSql, List<TableMeta> tableMetas) throws Exception {
+    private static Pair<SimpleDirectedGraph<Node, DefaultEdge>, String> parseLineage(String singleSql, List<TableMeta> tableMetas) {
         // 创建词法分析器
         ClickHouseLexer lexer = new ClickHouseLexer(CharStreams.fromString(singleSql));
 

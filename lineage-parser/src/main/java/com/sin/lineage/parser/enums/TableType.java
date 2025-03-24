@@ -9,4 +9,5 @@ package com.sin.lineage.parser.enums;
 public enum TableType {
     REAL_TABLE,
     TMP_TABLE,
+    ALIAS_TABLE
 }

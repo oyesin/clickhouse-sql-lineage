@@ -29,6 +29,7 @@ public class BaseLineageTest {
     @AfterEach
     void afterEach() {
         if (isLog) {
+            System.out.println("未过滤中间表的血缘: ");
             lineages.forEach(v -> {
                 List<Node> reverseList = Lists.newArrayList(v);
                 Collections.reverse(reverseList);
@@ -36,10 +37,23 @@ public class BaseLineageTest {
             });
         }
         List<String> list = lineages.stream()
-                .map(v -> v.get(0).toString() + "->" + v.get(v.size() - 1))
+                .map(v -> v.get(v.size() - 1) + "->" + v.get(0).toString())
                 .collect(Collectors.toList());
 
+        String actualLineage = getActualLineage(list);
         Assertions.assertEquals(expected.length, list.size());
-        Arrays.stream(expected).forEach(e -> Assertions.assertEquals(e, list.contains(e) ? e : null));
+        Arrays.stream(expected).forEach(e -> Assertions.assertEquals(e, list.contains(e) ? e : actualLineage));
+    }
+
+    private String getActualLineage(List<String> lineages) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < lineages.size(); i++) {
+            result.append(lineages.get(i));
+            if (i < lineages.size() - 1) {
+                result.append("\n");
+            }
+
+        }
+        return result.toString();
     }
 }
