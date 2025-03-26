@@ -40,6 +40,7 @@ public class BaseLineageTest {
                 System.out.println(reverseList.stream().map(Node::toString).collect(Collectors.joining("->")));
             });
         }
+
         List<String> list = lineages.stream()
                 .map(v -> v.get(v.size() - 1) + "->" + v.get(0).toString())
                 .collect(Collectors.toList());

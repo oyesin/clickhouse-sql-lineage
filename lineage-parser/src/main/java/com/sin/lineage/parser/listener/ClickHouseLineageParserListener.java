@@ -45,9 +45,9 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
     private final Map<String, List<String>> tableMap = Maps.newHashMap();
 
     /**
-     * 存储血缘的目标表名
+     * 存储血缘的目标表名，默认为stmt0，如果有insert，则是插入表的名称
      */
-    private String sinkTableName;
+    private String sinkTableName = "stmt0";
 
     public ClickHouseLineageParserListener(List<TableMeta> tableMetas) {
         g = new SimpleDirectedGraph<>(DefaultEdge.class);
@@ -80,16 +80,23 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
         statement.addColumns(parseColumnsClause(ctx.columnsClause()));
 
         // 添加source表
-        if (ctx.dataClause() instanceof ClickHouseParser.DataClauseSelectContext) {
-            ClickHouseParser.DataClauseSelectContext selectCtx = (ClickHouseParser.DataClauseSelectContext) ctx.dataClause();
+        if (ctx.dataClause() instanceof ClickHouseParser.DataClauseSelectContext instanceCtx) {
             Table sourceTable = new Table(generateStmtName(), TableType.TMP_TABLE);
             Statement srcStatement = new Statement(StatementType.SELECT);
             srcStatement.setSinkTable(sourceTable);
 
             statement.addSourceTable(sourceTable);
             stmtMap.put(ctx, statement);
-            stmtMap.put(selectCtx.selectUnionStmt(), srcStatement);
+            stmtMap.put(instanceCtx.topSelectStmt(), srcStatement);
         }
+    }
+
+    /**
+     * CTE语句
+     */
+    @Override
+    public void enterCteStmt(ClickHouseParser.CteStmtContext ctx) {
+        getStatementOfTopContext(ctx.topSelectStmt()).setSinkTable(new Table(generateStmtName(), TableType.TMP_TABLE));
     }
 
     /**
@@ -139,9 +146,6 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
         // 添加sink表
         if (statement.getSinkTable() == null) {
             statement.setSinkTable(new Table(generateStmtName(), TableType.TMP_TABLE));
-            if (sinkTableName == null) {
-                sinkTableName = statement.getSinkTable().getName();
-            }
         }
 
         // 解析列
@@ -154,7 +158,7 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
      * 在退出语句时解析列血缘
      */
     @Override
-    public void exitSelectUnionStmt(ClickHouseParser.SelectUnionStmtContext ctx) {
+    public void exitSelectStmt(ClickHouseParser.SelectStmtContext ctx) {
         Statement statement = getStatementOfTopContext(ctx);
 
         List<Column> expandColumns = Lists.newArrayList();
@@ -195,17 +199,15 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
     }
 
     private void parseColumnLineage(Statement statement) {
-        statement.getColumns().forEach(column -> {
-            statement.getSourceTable().forEach(sourceTable -> {
-                // 获取来源表拥有的列
-                List<String> columns = tableMap.getOrDefault(sourceTable.getName(), Lists.newArrayList());
-                if (columns.contains(column.getName())) {
-                    Node sourceNode = new Node(statement.getSinkTable().getName(), column.getName());
-                    Node targetNode = new Node(sourceTable.getName(), column.getName());
-                    Graphs.addEdgeWithVertices(g, sourceNode, targetNode);
-                }
-            });
-        });
+        statement.getColumns().forEach(column -> statement.getSourceTable().forEach(sourceTable -> {
+            // 获取来源表拥有的列
+            List<String> columns = tableMap.getOrDefault(sourceTable.getName(), Lists.newArrayList());
+            if (columns.contains(column.getName())) {
+                Node sourceNode = new Node(statement.getSinkTable().getName(), column.getName());
+                Node targetNode = new Node(sourceTable.getName(), column.getName());
+                Graphs.addEdgeWithVertices(g, sourceNode, targetNode);
+            }
+        }));
     }
 
     /**
@@ -274,7 +276,15 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
     private Statement getStatementOfTopContext(RuleContext ctx) {
         RuleContext parent = ctx;
         while (parent != null) {
-            if (parent instanceof ClickHouseParser.SelectUnionStmtContext) {
+            if (parent instanceof ClickHouseParser.TopSelectStmtContext) {
+                // 判断是否是cte语句
+                ClickHouseParser.NamedQueryContext namedQueryContext = getNamedQueryCtxOfCte(parent);
+                if (namedQueryContext != null) {
+                    Statement result = stmtMap.computeIfAbsent(parent, v -> new Statement(StatementType.SELECT));
+                    result.setSinkTable(new Table(namedQueryContext.name.getText(), TableType.TMP_TABLE));
+                    return result;
+                }
+
                 return stmtMap.computeIfAbsent(parent, v -> new Statement(StatementType.SELECT));
             }
 
@@ -282,6 +292,19 @@ public class ClickHouseLineageParserListener extends ClickHouseParserBaseListene
         }
 
         throw new IllegalArgumentException("获取Statement失败");
+    }
+
+    private ClickHouseParser.NamedQueryContext getNamedQueryCtxOfCte(RuleContext ctx) {
+        RuleContext parent = ctx;
+
+        while (parent != null) {
+            if (parent instanceof ClickHouseParser.NamedQueryContext instanceCtx) {
+                return instanceCtx;
+            }
+            parent = parent.getParent();
+        }
+
+        return null;
     }
 
     private List<Column> parseColumnsClause(ClickHouseParser.ColumnsClauseContext ctx) {

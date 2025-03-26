@@ -19,19 +19,19 @@ query
     | killStmt      // DDL
     | optimizeStmt  // DDL
     | renameStmt    // DDL
-    | selectUnionStmt
+    | topSelectStmt
     | setStmt
     | showStmt
     | systemStmt
     | truncateStmt  // DDL
     | useStmt
     | watchStmt
-    | ctes? selectStmt
+    | cteStmt
     ;
 
 // CTE statement
-ctes
-    : WITH namedQuery (',' namedQuery)*
+cteStmt
+    : WITH namedQuery (',' namedQuery)* topSelectStmt
     ;
 
 namedQuery
@@ -218,9 +218,9 @@ insertStmt: INSERT INTO TABLE? (tableIdentifier | FUNCTION tableFunctionExpr) co
 
 columnsClause: LPAREN nestedIdentifier (COMMA nestedIdentifier)* RPAREN;
 dataClause
-    : FORMAT identifier                                                         # DataClauseFormat
+    : FORMAT identifier                                                        # DataClauseFormat
     | VALUES  assignmentValues (COMMA assignmentValues)*                       # DataClauseValues
-    | selectUnionStmt SEMICOLON? EOF                                            # DataClauseSelect
+    | (topSelectStmt | cteStmt) SEMICOLON? EOF                                 # DataClauseSelect
     ;
 
 assignmentValues
@@ -249,7 +249,7 @@ renameStmt: RENAME TABLE tableIdentifier TO tableIdentifier (COMMA tableIdentifi
 
 projectionSelectStmt:
     LPAREN
-    withClause?
+//    withClause?
     SELECT columnExprList
     groupByClause?
     projectionOrderByClause?
@@ -258,10 +258,13 @@ projectionSelectStmt:
 
 // SELECT statement
 
-selectUnionStmt: selectStmtWithParens (UNION ALL selectStmtWithParens)*;
+// 区分合并语句上下文
+topSelectStmt: selectStmtWithParens | selectUnionStmt;
+
+selectUnionStmt: selectStmtWithParens (UNION ALL selectStmtWithParens)+;
 selectStmtWithParens: selectStmt | LPAREN selectUnionStmt RPAREN;
 selectStmt:
-    withClause?
+//    withClause?
     SELECT DISTINCT? topClause? columnExprList
     fromClause?
     arrayJoinClause?
@@ -276,7 +279,7 @@ selectStmt:
     settingsClause?
     ;
 
-withClause: WITH columnExprList;
+//withClause: cteStmt;
 topClause: TOP DECIMAL_LITERAL (WITH TIES)?;
 fromClause: FROM joinExpr;
 arrayJoinClause: (LEFT | INNER)? ARRAY JOIN columnExprList;

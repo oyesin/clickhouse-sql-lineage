@@ -28,15 +28,15 @@ public interface ClickHouseParserListener extends ParseTreeListener {
 	 */
 	void exitQuery(ClickHouseParser.QueryContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link ClickHouseParser#ctes}.
+	 * Enter a parse tree produced by {@link ClickHouseParser#cteStmt}.
 	 * @param ctx the parse tree
 	 */
-	void enterCtes(ClickHouseParser.CtesContext ctx);
+	void enterCteStmt(ClickHouseParser.CteStmtContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link ClickHouseParser#ctes}.
+	 * Exit a parse tree produced by {@link ClickHouseParser#cteStmt}.
 	 * @param ctx the parse tree
 	 */
-	void exitCtes(ClickHouseParser.CtesContext ctx);
+	void exitCteStmt(ClickHouseParser.CteStmtContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ClickHouseParser#namedQuery}.
 	 * @param ctx the parse tree
@@ -1094,6 +1094,16 @@ public interface ClickHouseParserListener extends ParseTreeListener {
 	 */
 	void exitProjectionSelectStmt(ClickHouseParser.ProjectionSelectStmtContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link ClickHouseParser#topSelectStmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterTopSelectStmt(ClickHouseParser.TopSelectStmtContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link ClickHouseParser#topSelectStmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitTopSelectStmt(ClickHouseParser.TopSelectStmtContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link ClickHouseParser#selectUnionStmt}.
 	 * @param ctx the parse tree
 	 */
@@ -1123,16 +1133,6 @@ public interface ClickHouseParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitSelectStmt(ClickHouseParser.SelectStmtContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link ClickHouseParser#withClause}.
-	 * @param ctx the parse tree
-	 */
-	void enterWithClause(ClickHouseParser.WithClauseContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link ClickHouseParser#withClause}.
-	 * @param ctx the parse tree
-	 */
-	void exitWithClause(ClickHouseParser.WithClauseContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link ClickHouseParser#topClause}.
 	 * @param ctx the parse tree

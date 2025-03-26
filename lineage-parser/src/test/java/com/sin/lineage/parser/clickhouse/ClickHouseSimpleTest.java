@@ -105,16 +105,90 @@ public class ClickHouseSimpleTest extends BaseLineageTest {
     }
 
     @Test
-    void testWith() {
-        sql = "with t1 as ()";
+    void testWith() throws Exception {
+        sql = """
+                with t1 as (
+                    select
+                        id
+                    from
+                        t_user
+                )
+                select
+                    *
+                from
+                    t1
+                """;
+
+        lineages = ClickHouseLineageParser.parseColumnLineage(sql, Lists.newArrayList(getTableMetaOfUser()));
+
+        expected = new String[]{
+                "t_user.id->stmt0.id"
+        };
+    }
+
+    @Test
+    void testNestingWith() throws Exception {
+        sql = """
+                WITH t1 AS (
+                    WITH t2 AS (
+                        SELECT
+                            name
+                        FROM
+                            t_user
+                    )
+                    SELECT
+                        *
+                    FROM
+                        t2
+                )
+                SELECT
+                    *
+                FROM
+                    t1
+                """;
+        lineages = ClickHouseLineageParser.parseColumnLineage(sql, Lists.newArrayList(getTableMetaOfUser()));
+
+        expected = new String[]{
+                "t_user.name->stmt0.name",
+        };
+    }
+
+    @Test
+    void testNestingWith2() throws Exception {
+        sql = """
+                WITH t1 AS (
+                    WITH t1 AS (
+                        SELECT
+                            name
+                        FROM
+                            t_user
+                    )
+                    SELECT
+                        *
+                    FROM
+                        t1
+                )
+                SELECT
+                    *
+                FROM
+                    t1
+                """;
+        lineages = ClickHouseLineageParser.parseColumnLineage(sql, Lists.newArrayList(getTableMetaOfUser()));
+
+        expected = new String[]{
+                "t_user.name->stmt0.name",
+        };
     }
 
     private TableMeta getTableMetaOfUser() throws Exception {
-        String createSql = "CREATE TABLE t_user (\n" +
-                "  id Int64,\n" +
-                "  name String,\n" +
-                "  age Int64\n" +
-                ") ENGINE = MergeTree() ORDER BY id";
+        String createSql = """
+                CREATE TABLE t_user (
+                    id Int64,
+                    name String,
+                    age Int32
+                ) ENGINE = MergeTree()
+                ORDER BY id
+                """;
         return ClickHouseLineageParser.parseDdl(Lists.newArrayList(createSql)).get(0);
     }
 }

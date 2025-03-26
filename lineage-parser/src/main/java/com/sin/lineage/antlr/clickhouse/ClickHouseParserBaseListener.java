@@ -41,13 +41,13 @@ public class ClickHouseParserBaseListener implements ClickHouseParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterCtes(ClickHouseParser.CtesContext ctx) { }
+	@Override public void enterCteStmt(ClickHouseParser.CteStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitCtes(ClickHouseParser.CtesContext ctx) { }
+	@Override public void exitCteStmt(ClickHouseParser.CteStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -1193,6 +1193,18 @@ public class ClickHouseParserBaseListener implements ClickHouseParserListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterTopSelectStmt(ClickHouseParser.TopSelectStmtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitTopSelectStmt(ClickHouseParser.TopSelectStmtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterSelectUnionStmt(ClickHouseParser.SelectUnionStmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -1224,18 +1236,6 @@ public class ClickHouseParserBaseListener implements ClickHouseParserListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitSelectStmt(ClickHouseParser.SelectStmtContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterWithClause(ClickHouseParser.WithClauseContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitWithClause(ClickHouseParser.WithClauseContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
