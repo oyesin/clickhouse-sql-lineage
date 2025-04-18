@@ -33,7 +33,7 @@ public class ClickHouseInsertTest extends BaseLineageTest {
         sink.setName("t_sink");
         sink.setColumns(Lists.newArrayList("c1", "c2"));
 
-        lineages = ClickHouseLineageParser.parseColumnLineage(sql, Lists.newArrayList(user));
+        lineages = ClickHouseLineageParser.parseColumnLineage(sql, Lists.newArrayList(user, sink));
 
         expected = new String[]{
                 "t_user.id->t_sink.c1",

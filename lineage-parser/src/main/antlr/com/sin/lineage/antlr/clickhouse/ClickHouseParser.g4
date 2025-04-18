@@ -26,16 +26,15 @@ query
     | truncateStmt  // DDL
     | useStmt
     | watchStmt
-    | cteStmt
     ;
 
 // CTE statement
 cteStmt
-    : WITH namedQuery (',' namedQuery)* topSelectStmt
+    : WITH namedQuery (',' namedQuery)* (selectStmtWithParens | selectUnionStmt)
     ;
 
 namedQuery
-    : name=identifier (columnAliases)? AS '(' query ')'
+    : name=identifier (columnAliases)? AS '(' topSelectStmt ')'
     ;
 
 columnAliases
@@ -220,7 +219,7 @@ columnsClause: LPAREN nestedIdentifier (COMMA nestedIdentifier)* RPAREN;
 dataClause
     : FORMAT identifier                                                        # DataClauseFormat
     | VALUES  assignmentValues (COMMA assignmentValues)*                       # DataClauseValues
-    | (topSelectStmt | cteStmt) SEMICOLON? EOF                                 # DataClauseSelect
+    | (topSelectStmt) SEMICOLON? EOF                                           # DataClauseSelect
     ;
 
 assignmentValues
@@ -259,7 +258,7 @@ projectionSelectStmt:
 // SELECT statement
 
 // 区分合并语句上下文
-topSelectStmt: selectStmtWithParens | selectUnionStmt;
+topSelectStmt: selectStmtWithParens | selectUnionStmt | cteStmt;
 
 selectUnionStmt: selectStmtWithParens (UNION ALL selectStmtWithParens)+;
 selectStmtWithParens: selectStmt | LPAREN selectUnionStmt RPAREN;
@@ -390,7 +389,7 @@ columnTypeExpr
 columnExprList: columnsExpr (COMMA columnsExpr)*;
 columnsExpr
     : (tableIdentifier DOT)? ASTERISK  # ColumnsExprAsterisk
-    | LPAREN selectUnionStmt RPAREN    # ColumnsExprSubquery
+    | LPAREN topSelectStmt RPAREN      # ColumnsExprSubquery
     // NOTE: asterisk and subquery goes before |columnExpr| so that we can mark them as multi-column expressions.
     | columnExpr                       # ColumnsExprColumn
     ;
@@ -440,7 +439,7 @@ columnExpr
     | columnExpr (alias | AS identifier)                                                  # ColumnExprAlias
 
     | (tableIdentifier DOT)? ASTERISK                                                     # ColumnExprAsterisk  // single-column only
-    | LPAREN selectUnionStmt RPAREN                                                       # ColumnExprSubquery  // single-column only
+    | LPAREN topSelectStmt RPAREN                                                         # ColumnExprSubquery  // single-column only
     | LPAREN columnExpr RPAREN                                                            # ColumnExprParens    // single-column only
     | LPAREN columnExprList RPAREN                                                        # ColumnExprTuple
     | LBRACKET columnExprList? RBRACKET                                                   # ColumnExprArray
@@ -462,7 +461,7 @@ nestedIdentifier: identifier (DOT identifier)?;
 tableExpr
     : tableIdentifier                    # TableExprIdentifier
     | tableFunctionExpr                  # TableExprFunction
-    | LPAREN selectUnionStmt RPAREN      # TableExprSubquery
+    | LPAREN topSelectStmt RPAREN        # TableExprSubquery
     | tableExpr (alias | AS identifier)  # TableExprAlias
     ;
 tableFunctionExpr: identifier LPAREN tableArgList? RPAREN;

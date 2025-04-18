@@ -7,7 +7,6 @@ import lombok.Getter;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * ClickHouse DDL 语句解析监听器
@@ -32,15 +31,15 @@ public class ClickHouseDdlParserListener extends ClickHouseParserBaseListener {
         tableMeta = new TableMeta();
         // 解析表名
         String tableName = ctx.tableIdentifier().identifier().getText();
-        tableMeta.setName(tableName);
+        tableMeta.setName(removeDialect(tableName));
 
         // 解析列定义
-        if (ctx.tableSchemaClause() instanceof ClickHouseParser.SchemaDescriptionClauseContext) {
-            ClickHouseParser.SchemaDescriptionClauseContext instanceCtx = (ClickHouseParser.SchemaDescriptionClauseContext) ctx.tableSchemaClause();
+        if (ctx.tableSchemaClause() instanceof ClickHouseParser.SchemaDescriptionClauseContext instanceCtx) {
             List<String> columns = instanceCtx.tableElementExpr().stream()
                     .map(this::parTableElementExpr)
                     .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+                    .map(this::removeDialect)
+                    .toList();
             tableMeta.setColumns(columns);
         }
     }
@@ -63,5 +62,9 @@ public class ClickHouseDdlParserListener extends ClickHouseParserBaseListener {
         }
 
         return null;
+    }
+
+    private String removeDialect(String name) {
+        return name.replace("`", "");
     }
 }

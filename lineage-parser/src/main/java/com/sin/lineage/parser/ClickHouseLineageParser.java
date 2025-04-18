@@ -17,7 +17,6 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * ClickHouse 血缘解析器
@@ -28,7 +27,7 @@ import java.util.stream.Collectors;
 public class ClickHouseLineageParser {
 
     /**
-     * 解析DDlL语句
+     * 解析DDL语句
      *
      * @param createTableSqlList create table sql列表
      * @return 表元数据列表
@@ -36,7 +35,7 @@ public class ClickHouseLineageParser {
     public static List<TableMeta> parseDdl(List<String> createTableSqlList) throws Exception {
         return createTableSqlList.stream()
                 .map(ClickHouseLineageParser::parseDdl)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -45,16 +44,17 @@ public class ClickHouseLineageParser {
      * @param singleSql  单条sql
      * @param tableMetas 表元数据
      * @return 列血缘
-     * @throws Exception 解析异常
      */
-    public static List<List<Node>> parseColumnLineage(String singleSql, List<TableMeta> tableMetas) throws Exception {
+    public static List<List<Node>> parseColumnLineage(String singleSql, List<TableMeta> tableMetas) {
         Pair<SimpleDirectedGraph<Node, DefaultEdge>, String> pair = parseLineage(singleSql, tableMetas);
 
         // 获取sink表所有字段的血缘
         return pair.getFirst().vertexSet().stream()
                 .filter(v -> v.getTableName().equals(pair.getSecond()))
                 .flatMap(v -> findAllPaths(pair.getFirst(), v).stream())
-                .collect(Collectors.toList());
+                // 过滤掉来源不是真实表的血缘
+                .filter(v -> !v.get(v.size() - 1).getTableName().contains("stmt"))
+                .toList();
     }
 
     /**

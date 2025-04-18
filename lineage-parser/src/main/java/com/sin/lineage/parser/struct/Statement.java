@@ -20,18 +20,8 @@ public class Statement {
 
     private List<Table> sourceTable = Lists.newArrayList();
 
-    private StatementType statementType;
-
-    public Statement(StatementType statementType) {
-        this.statementType = statementType;
-    }
-
     public void addColumns(List<Column> columns) {
         this.columns.addAll(columns);
-    }
-
-    public void addColumn(Column column) {
-        this.columns.add(column);
     }
 
     public void addSourceTable(Table sourceTable) {
@@ -40,5 +30,14 @@ public class Statement {
 
     public void addSourceTables(List<Table> sourceTables) {
         this.sourceTable.addAll(sourceTables);
+    }
+
+    public String getStatementName() {
+        return sinkTable.getName();
+    }
+
+    @Override
+    public String toString() {
+        return sinkTable.fullName();
     }
 }

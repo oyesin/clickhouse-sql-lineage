@@ -1,6 +1,5 @@
 package com.sin.lineage.parser.struct;
 
-import com.sin.lineage.parser.enums.TableType;
 import lombok.Data;
 
 /**
@@ -12,8 +11,6 @@ import lombok.Data;
 @Data
 public class Table {
 
-    private TableType type;
-
     private String dbName;
 
     private String name;
@@ -24,8 +21,15 @@ public class Table {
         this.name = name;
     }
 
-    public Table(String name, TableType type) {
-        this.name = name;
-        this.type = type;
+    public String fullName() {
+        return alias == null ? name : name + "_" + alias;
+    }
+
+    public Table copy() {
+        Table result = new Table(name);
+        result.dbName = dbName;
+        result.name = name;
+        result.alias = alias;
+        return result;
     }
 }
