@@ -54,7 +54,6 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>com.sin.lineage.server.LineageServerApplication</mainClass>
-                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>
