@@ -1,0 +1,14 @@
+{
+  "0 debug pnpm:scope": {
+    "selected": 1
+  },
+  "1 error pnpm": {
+    "code": "ERR_PNPM_NO_PKG_MANIFEST",
+    "err": {
+      "name": "pnpm",
+      "message": "No package.json found in E:\\github\\clickhouse-sql-lineage",
+      "code": "ERR_PNPM_NO_PKG_MANIFEST",
+      "stack": "pnpm: No package.json found in E:\\github\\clickhouse-sql-lineage\n    at handler (D:\\Develop\\nodejs\\node_global\\node_modules\\pnpm\\dist\\pnpm.cjs:121475:17)\n    at async D:\\Develop\\nodejs\\node_global\\node_modules\\pnpm\\dist\\pnpm.cjs:176441:21\n    at async run (D:\\Develop\\nodejs\\node_global\\node_modules\\pnpm\\dist\\pnpm.cjs:176415:34)\n    at async runPnpm (D:\\Develop\\nodejs\\node_global\\node_modules\\pnpm\\dist\\pnpm.cjs:176633:5)\n    at async D:\\Develop\\nodejs\\node_global\\node_modules\\pnpm\\dist\\pnpm.cjs:176625:7"
+    }
+  }
+}

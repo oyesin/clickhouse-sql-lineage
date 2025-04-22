@@ -1,0 +1,119 @@
+{
+  "code": 200,
+  "message": "analyze lineage success",
+  "data": {
+    "lineageGraph": {
+      "nodes": [
+        {
+          "id": "1",
+          "name": "table_a",
+          "columns": [
+            {
+              "id": "a1",
+              "name": "id",
+              "childrenCnt": 0
+            },
+            {
+              "id": "a2",
+              "name": "name",
+              "childrenCnt": 1
+            },
+            {
+              "id": "a3",
+              "name": "value",
+              "childrenCnt": 1
+            }
+          ],
+          "hasUpstream": false,
+          "hasDownstream": true,
+          "tableIcon": null,
+          "childrenCnt": 1
+        },
+        {
+          "id": "2",
+          "name": "table_b",
+          "columns": [
+            {
+              "id": "b1",
+              "name": "id",
+              "childrenCnt": 0
+            },
+            {
+              "id": "b2",
+              "name": "name_processed",
+              "childrenCnt": 1
+            },
+            {
+              "id": "b3",
+              "name": "value_sum",
+              "childrenCnt": 1
+            }
+          ],
+          "hasUpstream": true,
+          "hasDownstream": true,
+          "tableIcon": null,
+          "childrenCnt": 2
+        },
+        {
+          "id": "3",
+          "name": "table_c",
+          "columns": [
+            {
+              "id": "c1",
+              "name": "id",
+              "childrenCnt": 0
+            },
+            {
+              "id": "c2",
+              "name": "final_name",
+              "childrenCnt": 0
+            },
+            {
+              "id": "c3",
+              "name": "total_value",
+              "childrenCnt": 0
+            }
+          ],
+          "hasUpstream": true,
+          "hasDownstream": false,
+          "tableIcon": null,
+          "childrenCnt": 0
+        }
+      ],
+      "links": [
+        {
+          "id": "l1",
+          "relU": "1",
+          "relV": "2",
+          "u": "a2",
+          "v": "b2",
+          "transform": "UPPER(name)"
+        },
+        {
+          "id": "l2",
+          "relU": "1",
+          "relV": "2",
+          "u": "a3",
+          "v": "b3",
+          "transform": "SUM(value)"
+        },
+        {
+          "id": "l3",
+          "relU": "2",
+          "relV": "3",
+          "u": "b2",
+          "v": "c2",
+          "transform": "CONCAT(name_processed, '_final')"
+        },
+        {
+          "id": "l4",
+          "relU": "2",
+          "relV": "3",
+          "u": "b3",
+          "v": "c3",
+          "transform": "value_sum * 2"
+        }
+      ]
+    }
+  }
+}
