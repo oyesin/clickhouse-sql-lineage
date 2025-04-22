@@ -1,3 +1,41 @@
+# Lineage Web
+
+现代化 SQL 血缘分析 Web 界面，基于 React + TypeScript + Tailwind CSS 构建。
+
+## 技术栈
+
+- **React** - 用于构建用户界面的 JavaScript 库
+- **TypeScript** - JavaScript 的超集，添加静态类型定义
+- **Tailwind CSS** - 一个功能类优先的 CSS 框架
+- **Vite** - 现代前端构建工具
+
+## 开发
+
+```bash
+# 安装依赖
+pnpm install
+
+# 启动开发服务器
+pnpm dev
+
+# 构建生产版本
+pnpm build
+```
+
+## 目录结构
+
+```
+lineage-web/
+├── public/          # 静态资源
+├── src/             # 源代码
+│   ├── assets/      # 图片等资源
+│   ├── components/  # 可复用组件
+│   ├── App.tsx      # 主应用组件
+│   └── main.tsx     # 应用入口
+├── index.html       # HTML 模板
+└── package.json     # 项目配置
+```
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
