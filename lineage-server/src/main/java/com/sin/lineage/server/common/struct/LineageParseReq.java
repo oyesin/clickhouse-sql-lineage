@@ -2,6 +2,7 @@ package com.sin.lineage.server.common.struct;
 
 import com.sin.lineage.parser.struct.meta.TableMeta;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 import java.util.List;
@@ -24,5 +25,6 @@ public class LineageParseReq {
     /**
      * 表元数据
      */
+    @NotEmpty(message = "表元数据不能为空")
     private List<TableMeta> tableMetas;
 }
