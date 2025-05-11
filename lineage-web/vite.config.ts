@@ -7,4 +7,13 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  server: {
+    proxy: {
+      '/lineage': {
+        target: 'http://localhost:8080',
+        changeOrigin: false,
+        rewrite: path => path.replace(/^\/lineage/, '/lineage'),
+      },
+    },
+  },
 });
