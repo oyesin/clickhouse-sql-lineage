@@ -147,7 +147,13 @@ function App({ isTransition }: { isTransition?: boolean } = {}) {
   return (
     <div className={`flex h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-50'}${isTransition ? ' pointer-events-none select-none' : ''}`}>
       <div className={`w-1/3 border-r ${theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
-        <SQLPanel onAnalyze={handleAnalyze} onCreateResource={handleCreateResource} theme={theme} analyzeDisabled={loading} />
+        <SQLPanel 
+          onAnalyze={handleAnalyze} 
+          onCreateResource={handleCreateResource} 
+          theme={theme} 
+          analyzeDisabled={loading}
+          onError={setError}
+        />
         {error && <ErrorToast message={error} onClose={() => setError(null)} />}
         {success && <SuccessToast message={success} onClose={() => setSuccess(null)} />}
       </div>

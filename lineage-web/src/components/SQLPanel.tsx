@@ -11,9 +11,16 @@ interface SQLPanelProps {
   onCreateResource: (sql: string) => Promise<void>;
   theme: 'dark' | 'light';
   analyzeDisabled?: boolean;
+  onError?: (error: string) => void;
 }
 
-const SQLPanel: React.FC<SQLPanelProps> = ({ onAnalyze, onCreateResource, theme, analyzeDisabled }) => {
+const SQLPanel: React.FC<SQLPanelProps> = ({ 
+  onAnalyze, 
+  onCreateResource, 
+  theme, 
+  analyzeDisabled,
+  onError 
+}) => {
   const [sqlInput, setSqlInput] = useState('');
   const [hasCreatedResource, setHasCreatedResource] = useState(false);
   const [runTour, setRunTour] = useState(false);
@@ -62,19 +69,33 @@ const SQLPanel: React.FC<SQLPanelProps> = ({ onAnalyze, onCreateResource, theme,
     }
   };
 
+  const validateSql = (sql: string): boolean => {
+    const trimmedSql = sql.trim();
+    if (!trimmedSql) {
+      onError?.('SQL 语句不能为空');
+      return false;
+    }
+    return true;
+  };
+
   const handleCreateResource = async () => {
+    if (!validateSql(sqlInput)) {
+      return;
+    }
+
     try {
       await onCreateResource(sqlInput);
       setSqlInput('');
       setHasCreatedResource(true);
     } catch (error) {
-      // 创建资源失败时，重置状态
       setHasCreatedResource(false);
-      // 不清除输入，让用户可以修改后重试
     }
   };
 
   const handleAnalyze = () => {
+    if (!validateSql(sqlInput)) {
+      return;
+    }
     onAnalyze(sqlInput);
     setHasCreatedResource(false);
   };
