@@ -8,9 +8,9 @@ import ErrorBoundary from './components/ErrorBoundary';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>
+    <ThemeProvider>
+      <App />
+    </ThemeProvider>
     </ErrorBoundary>
   </StrictMode>
 );

@@ -7,10 +7,12 @@ import { oneDark } from '@codemirror/theme-one-dark';
 
 interface SQLPanelProps {
   onAnalyze: (sql: string) => void;
+  onCreateResource: (sql: string) => void;
   theme: 'dark' | 'light';
+  analyzeDisabled?: boolean;
 }
 
-const SQLPanel: React.FC<SQLPanelProps> = ({ onAnalyze, theme }) => {
+const SQLPanel: React.FC<SQLPanelProps> = ({ onAnalyze, onCreateResource, theme, analyzeDisabled }) => {
   const [sqlInput, setSqlInput] = useState('');
 
   const handleFormat = () => {
@@ -41,8 +43,18 @@ const SQLPanel: React.FC<SQLPanelProps> = ({ onAnalyze, theme }) => {
             Format
           </button>
           <button
+            onClick={() => onCreateResource(sqlInput)}
+            className="px-3 py-1.5 text-sm text-white bg-indigo-500 hover:bg-indigo-600 rounded-md transition-colors flex items-center gap-1"
+            disabled={analyzeDisabled}
+            style={analyzeDisabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+          >
+            Create Resource
+          </button>
+          <button
             onClick={() => onAnalyze(sqlInput)}
             className="px-3 py-1.5 text-sm text-white bg-indigo-500 hover:bg-indigo-600 rounded-md transition-colors flex items-center gap-1"
+            disabled={analyzeDisabled}
+            style={analyzeDisabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
           >
             <Play className="w-4 h-4" />
             Analyze

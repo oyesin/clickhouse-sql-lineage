@@ -15,8 +15,8 @@ const TableNode = memo(({ data }: TableNodeProps) => {
   const { node, links, theme } = data;
 
   const getColumnConnections = (columnId: string) => {
-    const asSource = links.find(link => link.u === columnId);
-    const asTarget = links.find(link => link.v === columnId);
+    const asSource = links.find(link => link.srcColumn === columnId);
+    const asTarget = links.find(link => link.tgtColumn === columnId);
     return { asSource, asTarget };
   };
 
@@ -35,7 +35,7 @@ const TableNode = memo(({ data }: TableNodeProps) => {
       
       <div className="space-y-1">
         {node.columns.map((column) => {
-          const { asSource, asTarget } = getColumnConnections(column.id);
+          const { asSource, asTarget } = column.id ? getColumnConnections(column.id) : { asSource: undefined, asTarget: undefined };
           const isLinked = asSource || asTarget;
 
           return (
@@ -67,7 +67,7 @@ const TableNode = memo(({ data }: TableNodeProps) => {
                     style={{ top: 'auto' }}
                   />
                 )}
-                {column.childrenCnt > 0 && (
+                {(column.childrenCnt ?? 0) > 0 && (
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
                     theme === 'dark' 
                       ? 'bg-slate-700 text-indigo-400' 
