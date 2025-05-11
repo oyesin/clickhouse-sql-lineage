@@ -1,21 +1,21 @@
-import { useEffect, useState } from 'react';
+import {useEffect, useState} from 'react';
 import ReactFlow, {
-  MiniMap,
-  Controls,
   Background,
-  useNodesState,
-  useEdgesState,
-  Node as FlowNode,
+  Controls,
   Edge,
+  MiniMap,
+  Node as FlowNode,
+  useEdgesState,
+  useNodesState,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
 import TableNode from './components/TableNode';
 import SQLPanel from './components/SQLPanel';
 import ThemeToggle from './components/ThemeToggle';
-import { useTheme } from './contexts/ThemeContext';
-import { createResource, fetchFields } from './api/lineage';
-import { Node, Link, LineageData, ResourceData } from './types';
+import {useTheme} from './contexts/ThemeContext';
+import {createResource, fetchFields} from './api/lineage';
+import {LineageData, Link, Node, ResourceData} from './types';
 import ErrorToast from './components/ErrorToast';
 import SuccessToast from './components/SuccessToast';
 
@@ -42,12 +42,12 @@ function App({ isTransition }: { isTransition?: boolean } = {}) {
       const data = await fetchFields(sql, resourceData);
       console.log('data', data);
       setLineageData(data);
-      setSuccess('血缘关系分析成功');
+        setSuccess('血缘解析成功');
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message || '分析失败');
+          setError(err.message || '解析失败');
       } else {
-        setError('分析失败');
+          setError('解析失败');
       }
     } finally {
       setLoading(false);
@@ -63,12 +63,12 @@ function App({ isTransition }: { isTransition?: boolean } = {}) {
       const data = await createResource(sql);
       console.log('data', data);
       setResourceData([...data.data]);
-      setSuccess('资源创建成功');
+        setSuccess('元数据添加成功');
     } catch (err: unknown) {
       if (err instanceof Error) {
-        setError(err.message || '分析失败');
+          setError(err.message || '解析失败');
       } else {
-        setError('分析失败');
+          setError('解析失败');
       }
     } finally {
       setLoading(false);

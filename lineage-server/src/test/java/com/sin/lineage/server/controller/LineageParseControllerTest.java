@@ -1,6 +1,7 @@
 package com.sin.lineage.server.controller;
 
 import com.sin.lineage.parser.struct.meta.TableMeta;
+import com.sin.lineage.server.common.struct.CreateSqlReq;
 import com.sin.lineage.server.common.struct.LineageParseReq;
 import jakarta.annotation.Resource;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,9 @@ class LineageParseControllerTest {
                 PARTITION BY toYYYYMM(sale_time)   -- 按月分区
                 ORDER BY (sale_time, product_id);  -- 按时间和产品排序
                 """;
-        lineageParseController.parseCreateSql(createSqlList);
+        CreateSqlReq req = new CreateSqlReq();
+        req.setCreateSqlList(createSqlList);
+        lineageParseController.parseCreateSql(req);
     }
 
     @Test
@@ -94,6 +97,8 @@ class LineageParseControllerTest {
                 PARTITION BY toYYYYMM(sale_time)   -- 按月分区
                 ORDER BY (sale_time, product_id);  -- 按时间和产品排序
                 """;
-        return lineageParseController.parseCreateSql(createSqlList).getData();
+        CreateSqlReq req = new CreateSqlReq();
+        req.setCreateSqlList(createSqlList);
+        return lineageParseController.parseCreateSql(req).getData();
     }
 }

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Code2, Play, HelpCircle } from 'lucide-react';
+import React, {useState} from 'react';
+import {Code2, HelpCircle, Play} from 'lucide-react';
 import CodeMirror from '@uiw/react-codemirror';
-import { sql } from '@codemirror/lang-sql';
-import { format } from 'sql-formatter';
-import { oneDark } from '@codemirror/theme-one-dark';
-import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
+import {sql} from '@codemirror/lang-sql';
+import {format} from 'sql-formatter';
+import {oneDark} from '@codemirror/theme-one-dark';
+import Joyride, {CallBackProps, STATUS, Step} from 'react-joyride';
 
 interface SQLPanelProps {
   onAnalyze: (sql: string) => void;
@@ -28,7 +28,7 @@ const SQLPanel: React.FC<SQLPanelProps> = ({
   const steps: Step[] = [
     {
       target: 'body',
-      content: '欢迎使用 SQL 血缘分析工具！让我们来了解一下基本功能。',
+        content: '欢迎使用 ClickHouse SQL 血缘解析工具！让我们来了解一下基本功能。',
       placement: 'center',
     },
     {
@@ -43,12 +43,12 @@ const SQLPanel: React.FC<SQLPanelProps> = ({
     },
     {
       target: '.create-resource-button',
-      content: '首先点击此按钮创建资源，这是分析血缘关系的第一步',
+        content: '首先点击此按钮添加表元数据，这是解析血缘关系的第一步',
       placement: 'left',
     },
     {
       target: '.analyze-button',
-      content: '创建资源后，输入新的 SQL 语句，然后点击此按钮分析血缘关系',
+        content: '添加元数据后，输入新的 SQL 语句，然后点击此按钮解析血缘关系',
       placement: 'left',
     },
   ];
@@ -133,7 +133,7 @@ const SQLPanel: React.FC<SQLPanelProps> = ({
       <div className={`p-4 border-b ${theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-slate-50'} flex items-center justify-between`}>
         <div className="flex items-center gap-2">
           <Code2 className={`w-5 h-5 ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`} />
-          <h2 className={`font-semibold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>SQL血缘分析</h2>
+            <h2 className={`font-semibold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>ClickHouse血缘解析</h2>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -167,7 +167,7 @@ const SQLPanel: React.FC<SQLPanelProps> = ({
             }`}
             disabled={analyzeDisabled || hasCreatedResource}
           >
-            创建资源
+              添加元数据
           </button>
           <button
             onClick={handleAnalyze}
@@ -177,7 +177,7 @@ const SQLPanel: React.FC<SQLPanelProps> = ({
             disabled={analyzeDisabled || !hasCreatedResource}
           >
             <Play className="w-4 h-4" />
-            分析
+              解析
           </button>
         </div>
       </div>

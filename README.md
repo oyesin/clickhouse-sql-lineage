@@ -100,6 +100,28 @@ cd clickhouse-sql-lineage
 mvn clean package
 ```
 
-启动可视化服务:
+启动后端服务:
 运行[LineageServerApplication.java](lineage-server/src/main/java/com/sin/lineage/server/LineageServerApplication.java)
-然后访问 [http://127.0.0.0.1:8080](http://127.0.0.1:8080)
+
+启动前端服务:
+
+> 前端构建可参考[README.md](lineage-web/README.md)
+
+```shell
+cd lineage-web
+
+# 安装依赖
+pnpm install
+
+# 启动开发服务器
+pnpm dev
+
+# 构建生产版本
+pnpm build
+```
+
+访问[http://localhost:5173/](http://localhost:5173/)
+
+![add-table-metas](doc/images/addTableMetas.png)
+
+![add-table-metas](doc/images/sql-parse.png)
