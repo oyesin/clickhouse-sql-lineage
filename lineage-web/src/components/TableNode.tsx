@@ -25,7 +25,7 @@ const TableNode = memo(({ data }: TableNodeProps) => {
     : 'bg-white border-slate-200 shadow-slate-200/50';
 
   return (
-    <div className={`backdrop-blur-sm rounded-lg shadow-lg p-4 min-w-[250px] border ${baseClasses}`}>
+    <div className={`backdrop-blur-sm rounded-lg shadow-lg p-4 min-w-[250px] border table-node ${baseClasses}`}>
       <div className={`flex items-center gap-2 mb-3 pb-2 border-b ${theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
         <Database className={`w-5 h-5 ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`} />
         <span className={`font-semibold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>
