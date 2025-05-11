@@ -17,6 +17,7 @@ import { useTheme } from './contexts/ThemeContext';
 import { createResource, fetchFields } from './api/lineage';
 import { Node, Link, LineageData, ResourceData } from './types';
 import ErrorToast from './components/ErrorToast';
+import SuccessToast from './components/SuccessToast';
 
 const nodeTypes = {
   tableNode: TableNode,
@@ -30,15 +31,18 @@ function App({ isTransition }: { isTransition?: boolean } = {}) {
   const [lineageData, setLineageData] = useState<LineageData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const handleAnalyze = async (sql: string) => {
     console.log('sql', sql);
     setLoading(true);
     setError(null);
+    setSuccess(null);
     try {
       const data = await fetchFields(sql, resourceData);
       console.log('data', data);
       setLineageData(data);
+      setSuccess('血缘关系分析成功');
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message || '分析失败');
@@ -54,10 +58,12 @@ function App({ isTransition }: { isTransition?: boolean } = {}) {
     console.log('sql', sql);
     setLoading(true);
     setError(null);
+    setSuccess(null);
     try {
       const data = await createResource(sql);
       console.log('data', data);
       setResourceData([...data.data]);
+      setSuccess('资源创建成功');
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message || '分析失败');
@@ -143,6 +149,7 @@ function App({ isTransition }: { isTransition?: boolean } = {}) {
       <div className={`w-1/3 border-r ${theme === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
         <SQLPanel onAnalyze={handleAnalyze} onCreateResource={handleCreateResource} theme={theme} analyzeDisabled={loading} />
         {error && <ErrorToast message={error} onClose={() => setError(null)} />}
+        {success && <SuccessToast message={success} onClose={() => setSuccess(null)} />}
       </div>
       <div className="w-2/3 relative">
         {loading && (

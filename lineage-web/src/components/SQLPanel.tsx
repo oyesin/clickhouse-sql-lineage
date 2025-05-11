@@ -8,7 +8,7 @@ import Joyride, { CallBackProps, STATUS, Step } from 'react-joyride';
 
 interface SQLPanelProps {
   onAnalyze: (sql: string) => void;
-  onCreateResource: (sql: string) => void;
+  onCreateResource: (sql: string) => Promise<void>;
   theme: 'dark' | 'light';
   analyzeDisabled?: boolean;
 }
@@ -63,9 +63,15 @@ const SQLPanel: React.FC<SQLPanelProps> = ({ onAnalyze, onCreateResource, theme,
   };
 
   const handleCreateResource = async () => {
-    await onCreateResource(sqlInput);
-    setSqlInput('');
-    setHasCreatedResource(true);
+    try {
+      await onCreateResource(sqlInput);
+      setSqlInput('');
+      setHasCreatedResource(true);
+    } catch (error) {
+      // 创建资源失败时，重置状态
+      setHasCreatedResource(false);
+      // 不清除输入，让用户可以修改后重试
+    }
   };
 
   const handleAnalyze = () => {

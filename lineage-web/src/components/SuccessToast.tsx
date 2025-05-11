@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
-import { XCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 
-interface ErrorToastProps {
+interface SuccessToastProps {
   message: string;
   onClose: () => void;
 }
 
-const ErrorToast: React.FC<ErrorToastProps> = ({ message, onClose }) => {
+const SuccessToast: React.FC<SuccessToastProps> = ({ message, onClose }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
@@ -17,12 +17,12 @@ const ErrorToast: React.FC<ErrorToastProps> = ({ message, onClose }) => {
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 animate-slide-in-top">
-      <div className="flex items-center gap-2 bg-red-50 text-red-800 px-4 py-3 rounded-lg shadow-lg border border-red-200">
-        <XCircle className="w-5 h-5 text-red-500" />
+      <div className="flex items-center gap-2 bg-green-50 text-green-800 px-4 py-3 rounded-lg shadow-lg border border-green-200">
+        <CheckCircle className="w-5 h-5 text-green-500" />
         <span>{message}</span>
         <button
           onClick={onClose}
-          className="ml-2 text-red-600 hover:text-red-800"
+          className="ml-2 text-green-600 hover:text-green-800"
           aria-label="关闭"
         >
           ×
@@ -32,4 +32,4 @@ const ErrorToast: React.FC<ErrorToastProps> = ({ message, onClose }) => {
   );
 };
 
-export default ErrorToast; 
+export default SuccessToast; 

@@ -20,10 +20,40 @@
   }
 }
 
+@keyframes slide-in-top {
+  from {
+    transform: translate(-50%, -100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-top {
+  from {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -100%);
+    opacity: 0;
+  }
+}
+
 .animate-slide-in-right {
   animation: slide-in-right 0.3s ease-out forwards;
 }
 
 .animate-slide-out-right {
   animation: slide-out-right 0.3s ease-in forwards;
+}
+
+.animate-slide-in-top {
+  animation: slide-in-top 0.3s ease-out forwards;
+}
+
+.animate-slide-out-top {
+  animation: slide-out-top 0.3s ease-in forwards;
 } 
