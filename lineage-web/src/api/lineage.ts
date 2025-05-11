@@ -1,4 +1,5 @@
 import instance from './index';
+import { ResourceData } from '../types';
 
 export async function createResource(sql: string) {
   try {
@@ -13,7 +14,7 @@ export async function createResource(sql: string) {
   }
 } 
 
-export async function fetchFields(singleSql: string, tableMetas: any[]) {
+export async function fetchFields(singleSql: string, tableMetas: ResourceData[]) {
   try {
     const res = await instance.post('/lineage/parse/field', { singleSql, tableMetas });
     return res.data;
