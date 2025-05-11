@@ -14,6 +14,7 @@ interface SQLPanelProps {
 
 const SQLPanel: React.FC<SQLPanelProps> = ({ onAnalyze, onCreateResource, theme, analyzeDisabled }) => {
   const [sqlInput, setSqlInput] = useState('');
+  const [hasCreatedResource, setHasCreatedResource] = useState(false);
 
   const handleFormat = () => {
     try {
@@ -24,6 +25,17 @@ const SQLPanel: React.FC<SQLPanelProps> = ({ onAnalyze, onCreateResource, theme,
     }
   };
 
+  const handleCreateResource = async () => {
+    await onCreateResource(sqlInput);
+    setSqlInput('');
+    setHasCreatedResource(true);
+  };
+
+  const handleAnalyze = () => {
+    onAnalyze(sqlInput);
+    setHasCreatedResource(false);
+  };
+
   return (
     <div className={`h-full flex flex-col ${theme === 'dark' ? 'bg-slate-900' : 'bg-white'}`}>
       <div className={`p-4 border-b ${theme === 'dark' ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-slate-50'} flex items-center justify-between`}>
@@ -31,7 +43,7 @@ const SQLPanel: React.FC<SQLPanelProps> = ({ onAnalyze, onCreateResource, theme,
           <Code2 className={`w-5 h-5 ${theme === 'dark' ? 'text-indigo-400' : 'text-indigo-600'}`} />
           <h2 className={`font-semibold ${theme === 'dark' ? 'text-slate-200' : 'text-slate-800'}`}>SQL Editor</h2>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <button
             onClick={handleFormat}
             className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
@@ -43,18 +55,20 @@ const SQLPanel: React.FC<SQLPanelProps> = ({ onAnalyze, onCreateResource, theme,
             Format
           </button>
           <button
-            onClick={() => onCreateResource(sqlInput)}
-            className="px-3 py-1.5 text-sm text-white bg-indigo-500 hover:bg-indigo-600 rounded-md transition-colors flex items-center gap-1"
-            disabled={analyzeDisabled}
-            style={analyzeDisabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+            onClick={handleCreateResource}
+            className={`px-3 py-1.5 text-sm text-white bg-indigo-500 hover:bg-indigo-600 rounded-md transition-colors flex items-center gap-1 ${
+              hasCreatedResource ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={analyzeDisabled || hasCreatedResource}
           >
             Create Resource
           </button>
           <button
-            onClick={() => onAnalyze(sqlInput)}
-            className="px-3 py-1.5 text-sm text-white bg-indigo-500 hover:bg-indigo-600 rounded-md transition-colors flex items-center gap-1"
-            disabled={analyzeDisabled}
-            style={analyzeDisabled ? { opacity: 0.6, cursor: 'not-allowed' } : {}}
+            onClick={handleAnalyze}
+            className={`px-3 py-1.5 text-sm text-white bg-indigo-500 hover:bg-indigo-600 rounded-md transition-colors flex items-center gap-1 ${
+              !hasCreatedResource ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={analyzeDisabled || !hasCreatedResource}
           >
             <Play className="w-4 h-4" />
             Analyze
