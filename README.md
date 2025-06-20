@@ -125,3 +125,13 @@ pnpm build
 ![add-table-metas](doc/images/addTableMetas.png)
 
 ![add-table-metas](doc/images/sql-parse.png)
+
+## Docker 构建
+
+```shell
+cd clickhouse-sql-lineage
+docker build -t clickhouse-sql-lineage .
+docker run -p 8080:8080 --name clickhouse-sql-lineage clickhouse-sql-lineage:latest
+```
+
+访问[http://localhost:8080](http://localhost:8080)

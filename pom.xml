@@ -11,7 +11,7 @@
     <modules>
         <module>lineage-parser</module>
         <module>lineage-server</module>
-        <module>lineage-web</module>
+        <!-- <module>lineage-web</module> -->
     </modules>
 
     <properties>
